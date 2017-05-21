@@ -164,7 +164,7 @@ def draw_labeled_bboxes(img, labels):
     # Return the image
     return img
 
-image = mpimg.imread('test_images/test6.jpg')
+image = mpimg.imread('test_images/test5.jpg')
 draw_image = np.copy(image)
 
 # Uncomment the following line if you extracted training
@@ -178,30 +178,32 @@ orient = 12
 pix_per_cell = 8
 cell_per_block = 2
 hog_channel = "ALL"  # Can be 0, 1, 2, or "ALL"
-y_start_stop = [350, None] # Min and max in y to search in slide_window()
+y_start_stop = [400, 656]  # Min and max in y to search in slide_window()
 
 X_scaler = joblib.load('preprocessing_scaler.pkl')
-clf = joblib.load('trained_svm_classifier.pkl')
+clf = joblib.load('trained_svm_classifier_2.pkl')
 
-windows = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop,
-                    xy_window=(96, 96), xy_overlap=(0.5, 0.5))
+windows_1 = slide_window(image, x_start_stop=[None, None], y_start_stop=[400,],
+                    xy_window=(96, 96), xy_overlap=(0.8, 0.8))
 
-windows_2 = slide_window(image, x_start_stop=[None, None], y_start_stop=[350, None],
-                    xy_window=(64, 64), xy_overlap=(0.5, 0.5))
+windows_2 = slide_window(image, x_start_stop=[None, None], y_start_stop=[400,464],
+                    xy_window=(64, 64), xy_overlap=(0.6, 0.6))
 
-windows_3 = slide_window(image, x_start_stop=[None, None], y_start_stop=[300, None],
-                    xy_window=(128, 128), xy_overlap=(0.8, 0.8))
+windows_3 = slide_window(image, x_start_stop=[None, None], y_start_stop=[400,656],
+                    xy_window=(128, 128), xy_overlap=(0.5, 0.5))
 
 
-windows_4 = slide_window(image, x_start_stop=[None, None], y_start_stop=[300, None],
-                    xy_window=(256, 256), xy_overlap=(0.8, 0.8))
+# windows_4 = slide_window(image, x_start_stop=[None, None], y_start_stop=[300, None],
+#                     xy_window=(256, 256), xy_overlap=(0.8, 0.8))
 
-hot_windows = search_windows(image, windows+windows_2+windows_3+windows_4, clf, X_scaler, color_space=colorspace,
+hot_windows = search_windows(image, windows_1+windows_2+windows_3, clf, X_scaler, color_space=colorspace,
                         orient=orient, pix_per_cell=pix_per_cell,
                         cell_per_block=cell_per_block,
                         hog_channel=hog_channel)
 
-search_area = draw_boxes(image, windows_4)
+search_area = draw_boxes(image, windows_3,color=(0,0,255),thick=7)
+search_area = draw_boxes(search_area, windows_2,color=(0,255,0),thick=5)
+search_area = draw_boxes(search_area, windows_1,color=(255,0,0),thick=3)
 plt.figure()
 plt.imshow(search_area)
 
