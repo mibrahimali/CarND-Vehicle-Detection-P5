@@ -1,103 +1,55 @@
-import matplotlib.image as mpimg
-import matplotlib.pyplot as plt
-import numpy as np
-import cv2
-import glob
-import time
-from sklearn.svm import SVC
-from sklearn.preprocessing import StandardScaler
-from skimage.feature import hog
-from sklearn.model_selection import train_test_split
-from sklearn.externals import joblib
-import pickle
-
-# Define a function to return HOG features and visualization
-def get_hog_features(img, orient, pix_per_cell, cell_per_block,
-                        vis=False, feature_vec=True):
-    # Call with two outputs if vis==True
-    if vis == True:
-        features, hog_image = hog(img, orientations=orient, pixels_per_cell=(pix_per_cell, pix_per_cell),
-                                  cells_per_block=(cell_per_block, cell_per_block), transform_sqrt=True,
-                                  visualise=vis, feature_vector=feature_vec)
-        return features, hog_image
-    # Otherwise call with one output
-    else:
-        features = hog(img, orientations=orient, pixels_per_cell=(pix_per_cell, pix_per_cell),
-                       cells_per_block=(cell_per_block, cell_per_block), transform_sqrt=True,
-                       visualise=vis, feature_vector=feature_vec)
-        return features
-
-# Define a function to extract features from a list of images
-def extract_features(imgs, cspace='RGB', orient=9,
-                        pix_per_cell=8, cell_per_block=2, hog_channel=0):
-    # Create a list to append feature vectors to
-    features = []
-    # Iterate through the list of images
-    for file in imgs:
-        # Read in each one by one
-        image = mpimg.imread(file)
-        # apply color conversion if other than 'RGB'
-        if cspace != 'RGB':
-            if cspace == 'HSV':
-                feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
-            elif cspace == 'LUV':
-                feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2LUV)
-            elif cspace == 'HLS':
-                feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
-            elif cspace == 'YUV':
-                feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2YUV)
-            elif cspace == 'YCrCb':
-                feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2YCrCb)
-        else: feature_image = np.copy(image)
-
-        # Call get_hog_features() with vis=False, feature_vec=True
-        if hog_channel == 'ALL':
-            hog_features = []
-            for channel in range(feature_image.shape[2]):
-                hog_features.append(get_hog_features(feature_image[:,:,channel],
-                                    orient, pix_per_cell, cell_per_block,
-                                    vis=False, feature_vec=True))
-            hog_features = np.ravel(hog_features)
-        else:
-            hog_features = get_hog_features(feature_image[:,:,hog_channel], orient,
-                        pix_per_cell, cell_per_block, vis=False, feature_vec=True)
-        # Append the new feature vector to the features list
-        features.append(hog_features)
-    # Return list of feature vectors
-    return features
+__author__ = 'Mohamed Ibrahim Ali'
+from support_functions import *
 
 
 if __name__ == "__main__":
     # Read Vehicles and non-Vehicles images pathes from hard using glob module
     vehicles = glob.glob('./vehicles/*/*.png')
+    # dataset shuffling to reduce effect of time series images
+    np.random.shuffle(vehicles)
+
     non_vehicles = glob.glob('./non-vehicles/*/*.png')
 
     # calculate some statistics of data set
 
     vehicles_size = len(vehicles)
     non_vehicles_size = len(non_vehicles)
-
+    # print statistics about dataset
     print("vehicles dataset size =", vehicles_size, " and Non-vehicles dataset size =", non_vehicles_size)
 
-    colorspace = 'RGB'  # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
-    orient = 12
-    pix_per_cell = 8
-    cell_per_block = 2
-    hog_channel = "ALL"  # Can be 0, 1, 2, or "ALL"
+    # features extraction parameters
+    color_space = 'RGB'  # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
+    orient = 9  # HOG orientations
+    pix_per_cell = 8  # HOG pixels per cell
+    cell_per_block = 2  # HOG cells per block
+    hog_channel = 0  # Can be 0, 1, 2, or "ALL"
+    spatial_size = (16, 16)  # Spatial binning dimensions
+    hist_bins = 32  # Number of histogram bins
+    spatial_feat = True  # Spatial features on or off
+    hist_feat = True  # Histogram features on or off
+    hog_feat = True  # HOG features on or off
 
     t = time.time()
-    car_features = extract_features(vehicles, cspace=colorspace, orient=orient,
-                                    pix_per_cell=pix_per_cell, cell_per_block=cell_per_block,
-                                    hog_channel=hog_channel)
-    notcar_features = extract_features(non_vehicles, cspace=colorspace, orient=orient,
-                                       pix_per_cell=pix_per_cell, cell_per_block=cell_per_block,
-                                       hog_channel=hog_channel)
+    car_features = extract_features(vehicles, color_space=color_space,
+                                    spatial_size=spatial_size, hist_bins=hist_bins,
+                                    orient=orient, pix_per_cell=pix_per_cell,
+                                    cell_per_block=cell_per_block,
+                                    hog_channel=hog_channel, spatial_feat=spatial_feat,
+                                    hist_feat=hist_feat, hog_feat=hog_feat)
+    notcar_features = extract_features(non_vehicles, color_space=color_space,
+                                       spatial_size=spatial_size, hist_bins=hist_bins,
+                                       orient=orient, pix_per_cell=pix_per_cell,
+                                       cell_per_block=cell_per_block,
+                                       hog_channel=hog_channel, spatial_feat=spatial_feat,
+                                       hist_feat=hist_feat, hog_feat=hog_feat)
     t2 = time.time()
     print(round(t2 - t, 2), 'Seconds to extract HOG features...')
     # Create an array stack of feature vectors
     X = np.vstack((car_features, notcar_features)).astype(np.float64)
+
     # Fit a per-column scaler
     X_scaler = StandardScaler().fit(X)
+    # save it into pickle file for later uses
     joblib.dump(X_scaler, 'preprocessing_scaler.pkl')
     # Apply the scaler to X
     scaled_X = X_scaler.transform(X)
