@@ -18,15 +18,15 @@ if __name__ == "__main__":
     print("vehicles dataset size =", vehicles_size, " and Non-vehicles dataset size =", non_vehicles_size)
 
     # features extraction parameters
-    color_space = 'RGB'  # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
-    orient = 9  # HOG orientations
+    color_space = 'YUV'  # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
+    orient = 12  # HOG orientations
     pix_per_cell = 8  # HOG pixels per cell
     cell_per_block = 2  # HOG cells per block
     hog_channel = 0  # Can be 0, 1, 2, or "ALL"
-    spatial_size = (16, 16)  # Spatial binning dimensions
+    spatial_size = (32, 32)  # Spatial binning dimensions
     hist_bins = 32  # Number of histogram bins
     spatial_feat = True  # Spatial features on or off
-    hist_feat = True  # Histogram features on or off
+    hist_feat = False  # Histogram features on or off
     hog_feat = True  # HOG features on or off
 
     t = time.time()
@@ -69,3 +69,10 @@ if __name__ == "__main__":
     # Save the dataset for later use
     dist_pickle = {"train_data": X_train, "train_label": y_train,"test_data": X_test, "test_label": y_test}
     pickle.dump(dist_pickle, open("dataset.p", "wb"))
+
+    """
+    vehicles dataset size = 8792  and Non-vehicles dataset size = 8968
+140.25 Seconds to extract HOG features...
+Using: 12 orientations 8 pixels per cell and 2 cells per block
+Feature vector length: 10128
+"""

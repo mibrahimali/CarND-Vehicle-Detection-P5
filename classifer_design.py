@@ -20,7 +20,7 @@ y_test = dataset['test_label']
 
 
 # Use a linear SVC
-svc = SVC(C=10.0, gamma='auto', kernel='rbf')
+svc = SVC(C=5.0, gamma='auto', kernel='rbf')
 
 # Check the training time for the SVC
 t = time.time()
