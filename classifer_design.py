@@ -5,14 +5,14 @@ import numpy as np
 import cv2
 import glob
 import time
-from sklearn.svm import SVC
+from sklearn.svm import SVC , LinearSVC
 from sklearn.preprocessing import StandardScaler
 from skimage.feature import hog
 from sklearn.model_selection import train_test_split
 from sklearn.externals import joblib
 import pickle
 
-dataset = pickle.load(open("dataset.p",'rb'))
+dataset = joblib.load("dataset.p")
 X_train = dataset['train_data']
 y_train = dataset['train_label']
 X_test = dataset['test_data']
@@ -20,8 +20,8 @@ y_test = dataset['test_label']
 
 
 # Use a linear SVC
-svc = SVC(C=5.0, gamma='auto', kernel='rbf')
-
+svc = SVC(C=10.0, gamma='auto', kernel='rbf')
+# svc = LinearSVC(C=10.0)
 # Check the training time for the SVC
 t = time.time()
 svc.fit(X_train, y_train)
@@ -39,28 +39,12 @@ print(round(t2 - t, 5), 'Seconds to predict', n_predict, 'labels with SVC')
 
 
 # save classifier for later uses
-joblib.dump(svc, 'trained_svm_classifier.pkl')
+joblib.dump(svc, 'trained_svm_classifier_2.pkl')
 
 """
-vehicles dataset size = 8792  and Non-vehicles dataset size = 8968
-68.55 Seconds to extract HOG features...
-Using: 12 orientations 8 pixels per cell and 2 cells per block
-Feature vector length: 7056
-1881.73 Seconds to train SVC...
-Test Accuracy of SVC =  0.9924
-My SVC predicts:  [ 0.  0.  1.  0.  0.  0.  1.  1.  0.  1.]
-For these 10 labels:  [ 0.  0.  1.  0.  0.  0.  1.  1.  0.  1.]
-0.35199 Seconds to predict 10 labels with SVC
-My SVC predicts:  [[  9.99904450e-01   9.55498679e-05]
- [  9.99990127e-01   9.87309506e-06]
- [  3.00000090e-14   1.00000000e+00]
- [  9.98796542e-01   1.20345753e-03]
- [  9.99903221e-01   9.67794164e-05]
- [  9.96015284e-01   3.98471579e-03]
- [  2.51729295e-12   1.00000000e+00]
- [  1.02171862e-09   9.99999999e-01]
- [  9.99785036e-01   2.14963663e-04]
- [  1.62964774e-01   8.37035226e-01]]
-For these 10 labels:  [ 0.  0.  1.  0.  0.  0.  1.  1.  0.  1.]
-0.24683 Seconds to predict 10 labels with SVC
+386.47 Seconds to train SVC...
+Test Accuracy of SVC =  0.9955
+My SVC predicts:  [ 1.  1.  1.  0.  1.  0.  0.  1.  1.  0.]
+For these 10 labels:  [ 1.  1.  1.  0.  1.  0.  0.  1.  1.  0.]
+0.314 Seconds to predict 10 labels with SVC
     """

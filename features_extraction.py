@@ -9,13 +9,15 @@ if __name__ == "__main__":
     np.random.shuffle(vehicles)
 
     non_vehicles = glob.glob('./non-vehicles/*/*.png')
-
+    np.random.shuffle(non_vehicles)
     # calculate some statistics of data set
 
     vehicles_size = len(vehicles)
     non_vehicles_size = len(non_vehicles)
     # print statistics about dataset
     print("vehicles dataset size =", vehicles_size, " and Non-vehicles dataset size =", non_vehicles_size)
+
+
 
     # features extraction parameters
     color_space = 'YUV'  # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
@@ -28,7 +30,30 @@ if __name__ == "__main__":
     spatial_feat = True  # Spatial features on or off
     hist_feat = False  # Histogram features on or off
     hog_feat = True  # HOG features on or off
+    """
+    # this section used to visualize sample of HOG extracted features
+    img = mpimg.imread(vehicles[10])
+    _, hog_img = get_hog_features(cv2.cvtColor(img, cv2.COLOR_RGB2YUV)[:,:,0], orient, pix_per_cell, cell_per_block,
+                     vis=True, feature_vec=True)
 
+    img_2 = mpimg.imread(non_vehicles[10])
+    _, hog_img_2 = get_hog_features(cv2.cvtColor(img_2, cv2.COLOR_RGB2YUV)[:,:,0], orient, pix_per_cell, cell_per_block,
+                                  vis=True, feature_vec=True)
+
+    fig = plt.figure()
+    plt.subplot(221)
+    plt.imshow(img)
+    plt.title('Sample Image')
+    plt.subplot(222)
+    plt.imshow(hog_img, cmap='gray')
+    plt.title('HOG Feature')
+    plt.subplot(223)
+    plt.imshow(img_2)
+    plt.subplot(224)
+    plt.imshow(hog_img_2, cmap='gray')
+    fig.tight_layout()
+    plt.show()
+    """
     t = time.time()
     car_features = extract_features(vehicles, color_space=color_space,
                                     spatial_size=spatial_size, hist_bins=hist_bins,
@@ -68,11 +93,11 @@ if __name__ == "__main__":
 
     # Save the dataset for later use
     dist_pickle = {"train_data": X_train, "train_label": y_train,"test_data": X_test, "test_label": y_test}
-    pickle.dump(dist_pickle, open("dataset.p", "wb"))
+    joblib.dump(dist_pickle, "dataset.p")
 
     """
     vehicles dataset size = 8792  and Non-vehicles dataset size = 8968
-140.25 Seconds to extract HOG features...
-Using: 12 orientations 8 pixels per cell and 2 cells per block
-Feature vector length: 10128
-"""
+    140.25 Seconds to extract HOG features...
+    Using: 12 orientations 8 pixels per cell and 2 cells per block
+    Feature vector length: 10128
+    """

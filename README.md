@@ -1,33 +1,135 @@
-# Vehicle Detection
-[![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
-
-
-In this project, your goal is to write a software pipeline to detect vehicles in a video (start with the test_video.mp4 and later implement on full project_video.mp4), but the main output or product we want you to create is a detailed writeup of the project.  Check out the [writeup template](https://github.com/udacity/CarND-Vehicle-Detection/blob/master/writeup_template.md) for this project and use it as a starting point for creating your own writeup.  
-
-Creating a great writeup:
+# **Vehicle Detection**
 ---
-A great writeup should include the rubric points as well as your description of how you addressed each point.  You should include a detailed description of the code used in each step (with line-number references and code snippets where necessary), and links to other supporting documents or external references.  You should include images in your writeup to demonstrate how your code works with examples.  
 
-All that said, please be concise!  We're not looking for you to write a book here, just a brief description of how you passed each rubric point, and references to the relevant code :). 
+[//]: # (Image References)
 
-You can submit your writeup in markdown or use another method and submit a pdf instead.
+[image1]: ./output_images/test1_labeled_output "Final Labeled output of test image 1"
+[image2]: ./output_images/test2_labeled_output "Final Labeled output of test image 2"
+[image3]: ./output_images/test3_labeled_output "Final Labeled output of test image 3"
+[image4]: ./output_images/test4_labeled_output "Final Labeled output of test image 4"
+[image5]: ./output_images/test5_labeled_output "Final Labeled output of test image 5"
+[image6]: ./output_images/test6_labeled_output "Final Labeled output of test image 6"
+[image7]: ./test_images/test1.jpg "test image 1"
+[image8]: ./test_images/test2.jpg "test image 2"
+[image9]: ./readme_images/car_not_car.png "Dataset Exploration"
+[image10]: ./readme_images/HOG_feature.png "HOG Features Extraction"
+[image11]: ./output_images/test1_search_area "Window Search area"
+[image12]: ./output_images/test1_classifier_output "Window Search area"
+[image13]: ./output_images/test1_heat_map "Window Search area"
+[image14]: ./output_images/heatmap_1.png "Heat map of test image 1"
+
+
+Overview
+---
+Self-Driving Cars have three main pillars : Perception, planning and control. Perception Module is responsible for Environmental awareness such as object, lane marking and traffic signs detection and tracking
+
+In this project, The main goal is to write a software pipeline to detect and track vehicles in a video using advanced Computer vision techniques, starting from suitable feature extraction and classifier training process ending with track and false positive detection removal on long sequence video segments.
+
+
+| Input Image | Output Image 	| 
+|:-------------:|:---------------------:| 
+| ![alt text][image7]    	| ![alt text][image1]  			| 
 
 The Project
 ---
 
 The goals / steps of this project are the following:
 
-* Perform a Histogram of Oriented Gradients (HOG) feature extraction on a labeled training set of images and train a classifier Linear SVM classifier
-* Optionally, you can also apply a color transform and append binned color features, as well as histograms of color, to your HOG feature vector. 
-* Note: for those first two steps don't forget to normalize your features and randomize a selection for training and testing.
-* Implement a sliding-window technique and use your trained classifier to search for vehicles in images.
-* Run your pipeline on a video stream (start with the test_video.mp4 and later implement on full project_video.mp4) and create a heat map of recurring detections frame by frame to reject outliers and follow detected vehicles.
-* Estimate a bounding box for vehicles detected.
+* Performing feature extraction on a labeled training set of images and train a classifier SVM classifier
+* Implementing a sliding-window technique and use your trained classifier to search for vehicles in images.
+* create pipeline on a video stream and create a heat map of recurring detections frame by frame to reject outliers and follow detected vehicles.
+* Estimating a bounding box for vehicles detected.
 
-Here are links to the labeled data for [vehicle](https://s3.amazonaws.com/udacity-sdc/Vehicle_Tracking/vehicles.zip) and [non-vehicle](https://s3.amazonaws.com/udacity-sdc/Vehicle_Tracking/non-vehicles.zip) examples to train your classifier.  These example images come from a combination of the [GTI vehicle image database](http://www.gti.ssr.upm.es/data/Vehicle_database.html), the [KITTI vision benchmark suite](http://www.cvlibs.net/datasets/kitti/), and examples extracted from the project video itself.   You are welcome and encouraged to take advantage of the recently released [Udacity labeled dataset](https://github.com/udacity/self-driving-car/tree/master/annotations) to augment your training data.  
+### **Dataset Exploration and Features Extraction**
+---
+Labeled images were taken from the GTI vehicle image database GTI, the KITTI vision benchmark suite, and examples extracted from the project video itself. All images are 64x64 pixels. A third data set released by Udacity was not used here. In total there are 8792 images of vehicles and 8968 images of non vehicles. Images of the GTI data set are taken from video sequences, to overcome this problem shuffling of dataset done before training the classifier. Shown below is an example of each class (vehicle, non-vehicle) of the data set. 
 
-Some example images for testing your pipeline on single frames are located in the `test_images` folder.  To help the reviewer examine your work, please save examples of the output from each stage of your pipeline in the folder called `ouput_images`, and include them in your writeup for the project by describing what each image shows.    The video called `project_video.mp4` is the video your pipeline should work well on.  
+![alt text][image9]
 
-**As an optional challenge** Once you have a working pipeline for vehicle detection, add in your lane-finding algorithm from the last project to do simultaneous lane-finding and vehicle detection!
+Training a classifier to differentiate between cars and not cars pictures can be done using multiple techniques, one can use deep learning methods using only raw image data or using simple classifiers and instead of raw data we trained it using pre-extracted features from these raw data.
 
-**If you're feeling ambitious** (also totally optional though), don't stop there!  We encourage you to go out and take video of your own, and show us how you would implement this project on a new video!
+for the sake of this project, Histogram of Oriented Gradients (HOG) and Spatial color information features was extracted from raw image data and used as dataset for classifier training.
+as an initial trial RGB color channels of images was used, but didn't give the best results. YUV color space was the best one.
+after many trails for the best parameters of HOG features extracted from images, here is the final parameters
+
+1- color space = 'YUV'  
+2- HOG orientations = 12  
+3- HOG pixels per cell = 8  
+4- HOG cell per block = 2  
+5- HOG channel = 0  # to reduce complexity of calculation
+
+![alt text][image10]
+
+And also to not depend on only one feature type,  image raw spatial information was taken part in feature vector used for training classifier by resizing image for 64x64 pix to 32x32.
+
+Dataset Preparation code can be found in "features_extraction.py" file    
+    
+#### **Important Note**
+Standardization of a dataset is a common requirement for many machine learning estimators: they might behave badly if the individual feature do not more or less look like standard normally distributed data (e.g. Gaussian with 0 mean and unit variance).
+
+This was one of the main important steps in preparing dataset , SKlearn Standard Scaler was used to normalize our dataset before feeding it to training pipeline.
+
+### **Classifier Design**
+---
+as a preparation step, I split Dataset into Training and testing sets with ratio of 80%-20%.
+SVM classifier is used for car classification, after tuning trails, a SVM classifier with 'rpf' kernal and C value = 10.0 is used. classifier give 99.5% accuracy on test set.
+
+Classifier design code can be found in "classifer_design.py" file  
+
+### **Search Method Design**
+---
+our classifier was trained to differentiate between cars and non-cars images, it can't understand full front-camera image data. for this purpose a search policy should divide raw FC image into parts were our classifier can test this part if it's a car image. window search technique was used for this purpose. 
+Multiple window sizes and overlapping ratio was tests, and the best outputs goes for this values
+
+| Window Size 	| Overlap Ration in XY 	| Start and End position in Y dir | 
+|:-------------:|:---------------------:|:---------------------:| 
+| [64,64]    	| [0.75, 0.75]   	| [400, 500]	|
+| [96,96]   	| [0.75, 0.75] 		| [400, 600]	|
+| [128,128]	| [0.75, 0.75]		| [400, 650]	|
+
+![alt text][image11]
+
+this function is implemented in lines[105-150] in "support_functions.py" file and used in "vehicle_detector.py" file.
+
+bellow is an image representing car-classified windows using this search strategy.
+![alt text][image12]
+
+
+### **Detection Fusion and False Positive Rejection**
+---
+using multiple scale windows with high overlap ration can results in many overlapping detection for the same object. these outputs should be combine together in order to predict overall size of object. also due to non-prefect classifier, some false positive detection can be found and must be rejected.
+
+a heat-map was build  from these detections in order to combine overlapping detections and remove false positives.
+
+![alt text][image14] 
+
+applying threshold on this heat map can reject false positive. threshold is set to 2 overlapping detection.
+
+
+
+![alt text][image13]
+
+### **Final Output**
+---
+final output of detection pipeline is threshold heat-map after applying label function to calculate final objects bounding boxes
+
+
+Full Images and video process pipeline can be found in "Vehicle_detector.py" file
+
+![alt text][image1]
+
+Project video output can be found [here](http://www.cvlibs.net/datasets/kitti/) 
+Potential shortcomings:
+---
+1- depending Hand crafted features from images can't insure overall generality of pipeline
+
+2- Dataset size is relatively small, this can affect detection accuracy.
+
+
+Possible improvements:
+---
+1- extracting mode training data from Udacity data set and using Data Augmentation techniques to improve overall classifier accuracy.  
+
+2- Using Deep Learning Techniques To have a single pipeline takes Front Camera image and predict vehicles positions and bounding boxes.
+
+3- Using Kalman Filters for measurement tracking to increase pipeline stability.
