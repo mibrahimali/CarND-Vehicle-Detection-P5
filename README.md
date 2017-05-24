@@ -99,11 +99,22 @@ bellow is an image representing car-classified windows using this search strateg
 ---
 using multiple scale windows with high overlap ration can results in many overlapping detection for the same object. these outputs should be combine together in order to predict overall size of object. also due to non-prefect classifier, some false positive detection can be found and must be rejected.
 
-a heat-map was build  from these detections in order to combine overlapping detections and remove false positives.
+a heat-map was build from these detections in order to combine overlapping detections and remove false positives.
+
+Also to make sure of false positive rejection, multi-frame accumulated heatmap is used by storing the heatmap of the last N frames (N can be 5 or 8) and do the same thresholding and labeling on average of these heatmaps.
+
+'''
+from collections import deque
+history = deque(maxlen = 10)
+history.append(current_heat_map)
+'''
+
+code for this part can be found in "support_functions.py" lines [279-283]
+
 
 ![alt text][image14] 
 
-applying threshold on this heat map can reject false positive. threshold is set to 2 overlapping detection.
+applying threshold on this heat map can reject false positive. threshold is set to 3 overlapping detection.
 
 ![alt text][image13]
 

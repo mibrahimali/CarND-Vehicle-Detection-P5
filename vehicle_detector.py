@@ -13,6 +13,8 @@ from sklearn.externals import joblib
 from scipy.ndimage.measurements import label
 from moviepy.editor import VideoFileClip
 import os
+from collections import deque
+heat_map_history = deque(maxlen=5)
 
 color_space = 'YUV'  # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
 orient = 12  # HOG orientations
@@ -32,14 +34,14 @@ def process_video(image):
     image = image.astype(np.float32) / 255
     heat = np.zeros_like(image[:, :, 0]).astype(np.float)
 
-    windows = slide_window(image, x_start_stop=[None, None], y_start_stop=[400,500],
-                        xy_window=(64, 64), xy_overlap=(0.75, 0.75))
+    windows = slide_window(image, x_start_stop=[800, None], y_start_stop=[450, 650],
+                           xy_window=(64, 64), xy_overlap=(0.8, 0.8))
 
-    windows += slide_window(image, x_start_stop=[None, None], y_start_stop=[400,650],
-                        xy_window=(96, 96), xy_overlap=(0.75, 0.75))
+    windows += slide_window(image, x_start_stop=[650, None], y_start_stop=[400, 650],
+                            xy_window=(96, 96), xy_overlap=(0.8, 0.8))
 
-    # windows += slide_window(image, x_start_stop=[None, None], y_start_stop=[400,600],
-    #                     xy_window=(128, 128), xy_overlap=(0.75, 0.75))
+    windows += slide_window(image, x_start_stop=[900, None], y_start_stop=[450, 650],
+                        xy_window=(128, 128), xy_overlap=(0.8, 0.8))
 
 
     hot_windows = search_windows(image, windows, svc, X_scaler, color_space=color_space,
@@ -50,10 +52,13 @@ def process_video(image):
                         hist_feat=hist_feat, hog_feat=hog_feat)
 
     # Add heat to each box in box list
-    heat = add_heat(heat, hot_windows)
+    current_heat_map = add_heat(heat, hot_windows)
+    print(np.max(current_heat_map))
+    heat_map_history.append(current_heat_map)
 
+    heat = get_avg_heatmp(heat_map_history)
     # Apply threshold to help remove false positives
-    heat = apply_threshold(heat, 3)
+    heat = apply_threshold(heat, 1)
 
     # Visualize the heatmap when displaying
     heatmap = np.clip(heat, 0, 255)
@@ -83,30 +88,29 @@ def process_image(imagefile):
     search_image = np.copy(image)
     heat = np.zeros_like(image[:, :, 0]).astype(np.float)
 
-    windows = slide_window(image, x_start_stop=[None, None], y_start_stop=[400,600],
-                        xy_window=(64, 64), xy_overlap=(0.75, 0.75))
+    # windows = slide_window(image, x_start_stop=[800, None], y_start_stop=[450, 650],
+    #                        xy_window=(64, 64), xy_overlap=(0.8, 0.8))
 
-    windows_2 = slide_window(image, x_start_stop=[None, None], y_start_stop=[400,600],
-                        xy_window=(96, 96), xy_overlap=(0.75, 0.75))
+    windows = slide_window(image, x_start_stop=[650, None], y_start_stop=[400, 650],
+                           xy_window=(96, 96), xy_overlap=(0.8, 0.8))
 
-    windows_3 = slide_window(image, x_start_stop=[None, None], y_start_stop=[400,600],
-                        xy_window=(128, 128), xy_overlap=(0.75, 0.75))
+    windows += slide_window(image, x_start_stop=[900, None], y_start_stop=[450, 650],
+                            xy_window=(128, 128), xy_overlap=(0.8, 0.8))
 
 
     # windows_4 = slide_window(image, x_start_stop=[None, None], y_start_stop=[300, None],
     #                     xy_window=(256, 256), xy_overlap=(0.8, 0.8))
 
-    hot_windows = search_windows(image, windows+windows_2+windows_3, svc, X_scaler, color_space=color_space,
+    hot_windows = search_windows(image, windows, svc, X_scaler, color_space=color_space,
                         spatial_size=spatial_size, hist_bins=hist_bins,
                         orient=orient, pix_per_cell=pix_per_cell,
                         cell_per_block=cell_per_block,
                         hog_channel=hog_channel, spatial_feat=spatial_feat,
                         hist_feat=hist_feat, hog_feat=hog_feat)
 
-
     search_area = draw_boxes(search_image, windows,color=(1.0,1.0,0),thick=3)
-    search_area = draw_boxes(search_area, windows_2, color=(0, 1.0, 0.5), thick=5)
-    search_area = draw_boxes(search_area, windows_3, color=(0.5, 0.5, 0.5), thick=6)
+    # search_area = draw_boxes(search_area, windows_2, color=(0, 1.0, 0.5), thick=5)
+    # search_area = draw_boxes(search_area, windows_3, color=(0.5, 0.5, 0.5), thick=6)
     # plt.figure()
     # plt.imshow(search_area)
     mpimg.imsave('output_images/{}_search_area'.format(file_name), search_area)
@@ -121,7 +125,7 @@ def process_image(imagefile):
     heat = add_heat(heat, hot_windows)
 
     # Apply threshold to help remove false positives
-    heat = apply_threshold(heat, 1)
+    heat = apply_threshold(heat, 4)
 
     # Visualize the heatmap when displaying
     heatmap = np.clip(heat, 0, 255)
@@ -150,19 +154,21 @@ if __name__ == "__main__":
     # images_path = glob.glob('./test_images/*.jpg')
     # for image_path in images_path:
     #     output_image = process_image(image_path)
-
+    #
     #     plt.figure()
     #     plt.imshow(output_image)
     # plt.show()
 
 
-    # challenge_output = 'test_video_out__rpf_3_window_350_450_400_550_500_650.mp4'
+    # challenge_output = 'test_video_out.mp4'
     # clip2 = VideoFileClip('test_video.mp4')
     # challenge_clip = clip2.fl_image(process_video)
     # challenge_clip.write_videofile(challenge_output, audio=False)
 
 
-    challenge_output = 'project_video_out_rpf_3_window_400_600.mp4'
-    clip2 = VideoFileClip('project_video.mp4')
-    challenge_clip = clip2.fl_image(process_video)
-    challenge_clip.write_videofile(challenge_output, audio=False)
+    output = 'project_video_out.mp4'
+    clip = VideoFileClip('project_video.mp4')
+    out_clip = clip.fl_image(process_video)
+    out_clip.write_videofile(output, audio=False)
+
+

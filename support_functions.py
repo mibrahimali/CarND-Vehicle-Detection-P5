@@ -276,3 +276,8 @@ def draw_labeled_bboxes(img, labels):
     # Return the image
     return img
 
+def get_avg_heatmp(heat_map_history):
+    avg_map = np.zeros_like(heat_map_history[0]).astype(np.float)
+    for map_sample in heat_map_history:
+        avg_map += map_sample
+    return (avg_map/len(heat_map_history)).astype(np.int)
