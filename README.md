@@ -127,7 +127,7 @@ Full Images and video process pipeline can be found in "Vehicle_detector.py" fil
 
 ![alt text][image1]
 
-Project video output can be found [here](http://www.cvlibs.net/datasets/kitti/). 
+Project video output can be found [here](https://github.com/mibrahimali/CarND-Vehicle-Detection-P5/blob/master/project_video_out.mp4). 
 
 Potential shortcomings:
 ---
