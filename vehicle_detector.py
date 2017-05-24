@@ -35,15 +35,12 @@ def process_video(image):
     windows = slide_window(image, x_start_stop=[None, None], y_start_stop=[400,500],
                         xy_window=(64, 64), xy_overlap=(0.75, 0.75))
 
-    windows += slide_window(image, x_start_stop=[None, None], y_start_stop=[400,600],
+    windows += slide_window(image, x_start_stop=[None, None], y_start_stop=[400,650],
                         xy_window=(96, 96), xy_overlap=(0.75, 0.75))
 
-    windows += slide_window(image, x_start_stop=[None, None], y_start_stop=[450,600],
-                        xy_window=(128, 128), xy_overlap=(0.75, 0.75))
+    # windows += slide_window(image, x_start_stop=[None, None], y_start_stop=[400,600],
+    #                     xy_window=(128, 128), xy_overlap=(0.75, 0.75))
 
-
-    # windows_4 = slide_window(image, x_start_stop=[None, None], y_start_stop=[300, None],
-    #                     xy_window=(256, 256), xy_overlap=(0.8, 0.8))
 
     hot_windows = search_windows(image, windows, svc, X_scaler, color_space=color_space,
                         spatial_size=spatial_size, hist_bins=hist_bins,
@@ -56,7 +53,7 @@ def process_video(image):
     heat = add_heat(heat, hot_windows)
 
     # Apply threshold to help remove false positives
-    heat = apply_threshold(heat, 2)
+    heat = apply_threshold(heat, 3)
 
     # Visualize the heatmap when displaying
     heatmap = np.clip(heat, 0, 255)
@@ -86,13 +83,13 @@ def process_image(imagefile):
     search_image = np.copy(image)
     heat = np.zeros_like(image[:, :, 0]).astype(np.float)
 
-    windows = slide_window(image, x_start_stop=[None, None], y_start_stop=[400,500],
+    windows = slide_window(image, x_start_stop=[None, None], y_start_stop=[400,600],
                         xy_window=(64, 64), xy_overlap=(0.75, 0.75))
 
     windows_2 = slide_window(image, x_start_stop=[None, None], y_start_stop=[400,600],
                         xy_window=(96, 96), xy_overlap=(0.75, 0.75))
 
-    windows_3 = slide_window(image, x_start_stop=[None, None], y_start_stop=[400,650],
+    windows_3 = slide_window(image, x_start_stop=[None, None], y_start_stop=[400,600],
                         xy_window=(128, 128), xy_overlap=(0.75, 0.75))
 
 
@@ -150,9 +147,9 @@ def process_image(imagefile):
 
 if __name__ == "__main__":
 
-    images_path = glob.glob('./test_images/*.jpg')
-    for image_path in images_path:
-        output_image = process_image(image_path)
+    # images_path = glob.glob('./test_images/*.jpg')
+    # for image_path in images_path:
+    #     output_image = process_image(image_path)
 
     #     plt.figure()
     #     plt.imshow(output_image)
@@ -165,7 +162,7 @@ if __name__ == "__main__":
     # challenge_clip.write_videofile(challenge_output, audio=False)
 
 
-    # challenge_output = 'project_video_out_rpf_3_window_350_500_400_600_400_650.mp4'
-    # clip2 = VideoFileClip('project_video.mp4')
-    # challenge_clip = clip2.fl_image(process_video)
-    # challenge_clip.write_videofile(challenge_output, audio=False)
+    challenge_output = 'project_video_out_rpf_3_window_400_600.mp4'
+    clip2 = VideoFileClip('project_video.mp4')
+    challenge_clip = clip2.fl_image(process_video)
+    challenge_clip.write_videofile(challenge_output, audio=False)

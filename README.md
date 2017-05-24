@@ -105,8 +105,6 @@ a heat-map was build  from these detections in order to combine overlapping dete
 
 applying threshold on this heat map can reject false positive. threshold is set to 2 overlapping detection.
 
-
-
 ![alt text][image13]
 
 ### **Final Output**
@@ -118,7 +116,8 @@ Full Images and video process pipeline can be found in "Vehicle_detector.py" fil
 
 ![alt text][image1]
 
-Project video output can be found [here](http://www.cvlibs.net/datasets/kitti/) 
+Project video output can be found [here](http://www.cvlibs.net/datasets/kitti/). 
+
 Potential shortcomings:
 ---
 1- depending Hand crafted features from images can't insure overall generality of pipeline
